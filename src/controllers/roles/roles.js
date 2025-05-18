@@ -1,16 +1,20 @@
 const Role = require("../../moduls/rol");
 
 // Crear un rol
-exports.role = (req, res) => {
+exports.roleCreate = (req, res) => {
+
   try {
-    const { rol, descripcion, permisos } = req.body;
-    if (!rol || !descripcion || !permisos) {
+    const { rol, describe, permisos } = req.body;
+   
+    console.log(req.body);
+    if (!rol || !describe || !permisos) {
       return res.status(400).json({ msg: "Ingresa los datos completos" });
     }
     const newRole = new Role({
       rol,
-      descripcion,
-      permisos,
+      descripcion: describe, 
+      permisos,                
+      
     });
     newRole.save();
     res.json({ msg: "Rol creado" });
@@ -28,4 +32,5 @@ exports.getRoles = async (req, res) => {
     console.log(Error)
   }
 };
+
 

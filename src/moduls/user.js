@@ -21,14 +21,13 @@ const SchemaUserl = new mongoose.Schema({
         required: true,
         trim: true,
     },
-    permisos: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'permisos',
-        required: true, 
+    user: {
+        type: String,
+        required: true,
+        trim: true,
     },
     rol: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'roles',
+        type: String,
         required: true,
     },
 }, {timestamps: true});

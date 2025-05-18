@@ -9,9 +9,9 @@ const SchemaPermiso = new mongoose.Schema({
     type: String,
     required: true,
   },
-  acciones: {
+  accion: {
     type: [String],
-    enum: ['Ver', 'Editar', 'Eliminar'],
+    enum: ['Ver', 'Editar', 'Eliminar', 'Crear'],
     required: true,
   },
 }, {timestamps: true});

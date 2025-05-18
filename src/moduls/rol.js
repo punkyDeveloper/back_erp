@@ -12,8 +12,8 @@ const SchemaRol = new mongoose.Schema({
     
   },  
   permisos: {
-    type: String,
-    // required: [true, 'Se requiere una permisos'],
+    type: Array,
+    required: [true, 'Se requiere los permisos'],
     
   },
 }, {timestamps: true});
