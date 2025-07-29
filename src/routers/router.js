@@ -1,5 +1,6 @@
 const login = require('../controllers/login/login');
-const usaurios = require('../controllers/user/registrarUsuario');
+const Usaurios = require('../controllers/user/registrarUsuario');
+const usuario = require('../controllers/user/user')
 const permisos = require('../controllers/permisos/permisos')
 // role
 const Role = require('../controllers/roles/roles')
@@ -14,7 +15,8 @@ router.get('/role',Role.getRoles)
 // login
 router.post('/login', login.login);
 // Usuarios
-router.post("/usuario", usaurios.createUser);
+router.post("/usuario", Usaurios.createUser);
+router.get("/usuarios", usuario.getUsers);
 // Permisos
 router.post("/permisos", permisos.permiso)
 router.get("/permisos", permisos.getPermisos)

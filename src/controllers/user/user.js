@@ -26,4 +26,16 @@ exports.createUser = async (req, res) => {
         console.error(error);
         res.status(500).json({ msg: 'Error al crear el usuario' });
     }
+}
+
+// Obtener todos los usuarios
+exports.getUsers = async (req, res) => {    
+    try {
+        const users = await User.find({},{_id:0, __v:0, password:0});
+
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Error al obtener los usuarios' });
     }
+}
