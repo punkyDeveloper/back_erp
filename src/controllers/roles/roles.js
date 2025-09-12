@@ -29,6 +29,7 @@ exports.getRoles = async (req, res) => {
     const roles = await Role.find();
     res.json(roles);
   } catch (error) {
+    res.json({ msg: "Error al obtener los roles" });
     console.log(Error)
   }
 };

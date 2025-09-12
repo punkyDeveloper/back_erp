@@ -23,13 +23,18 @@ const SchemaUserl = new mongoose.Schema({
     },
     user: {
         type: String,
-        required: true,
         trim: true,
     },
     rol: {
         type: String,
         required: true,
     },
+    estado: {
+        type: Boolean,
+
+    },
+    compania: { type: mongoose.Schema.Types.ObjectId, ref: 'Company' }
+
 }, {timestamps: true});
 
 const nuevoUsuario = mongoose.model('usuario', SchemaUserl);
