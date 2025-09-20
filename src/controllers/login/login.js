@@ -7,20 +7,17 @@ exports.login = async (req, res)=>{
     try {
         const {email, password} = req.body;
 
+
         if(!email || !password){
             return res.status(400).json({msg: "Por favor ingresa todos los campos"})
         }
 
         const user = await User.findOne({email})
-        if(!user){
+        const passwordMatch = await  User.findOne({password})
+        if(!user || !passwordMatch){
             return res.status(400).json({msg: "El usuario no existe"})
         }
 
-        const passwordMatch = await  User.findOne({password})
-
-        if(!passwordMatch){
-            return res.status(400).json({msg: "Contraseña incorrecta"})
-        }
         
         // const isMatch = await bcrypt.compare(password, user.password)
         // if(!isMatch){
