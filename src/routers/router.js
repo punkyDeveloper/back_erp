@@ -2,6 +2,7 @@ const login = require('../controllers/login/login');
 const Usaurios = require('../controllers/user/registrarUsuario');
 const usuario = require('../controllers/user/user')
 const permisos = require('../controllers/permisos/permisos')
+const apiKeyMiddleware = require('../middleware/apiKey'); // Importa el middleware de API Key
 // role
 const Role = require('../controllers/roles/roles')
 // eslint-disable-next-line no-unused-vars
@@ -10,10 +11,10 @@ const express = require('express');
 // eslint-disable-next-line new-cap
 const router =express.Router();
 // role
-router.post('/roleC',Role.roleCreate)
+router.post('/roleC',apiKeyMiddleware ,Role.roleCreate)
 router.get('/role',Role.getRoles)
 // login
-router.post('/login', login.login);
+router.post('/login',apiKeyMiddleware, login.login);
 // Usuarios
 router.post("/usuario", Usaurios.createUser);
 router.get("/usuarios", usuario.getUsers);
