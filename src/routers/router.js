@@ -2,6 +2,7 @@ const login = require('../controllers/login/login');
 const Usaurios = require('../controllers/user/user.controller');
 const permisos = require('../controllers/permisos/permisos')
 const Company = require('../controllers/user/compania.controler')
+const Productos = require('../controllers/productos/productController');
 try {
   // role
   const Role = require('../controllers/roles/roles')
@@ -28,6 +29,10 @@ try {
   
   // comapñias
   router.post("/companias", Company.createCompany)
+
+  // productos
+  router.post("/productos", Productos.createProduct)
+  // router.get("/productos", Productos.getProducts)
 
 module.exports=router;
 } catch (error) {

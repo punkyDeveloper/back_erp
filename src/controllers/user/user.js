@@ -69,7 +69,16 @@ async function registrar({ nombre :name,email,password,rol : rol_id,user,apellid
 // traer los usuarios
 async function getUsers() {
     try {
-        const users = await User.find({},{_id:0, __v:0, password:0});
+        const users = await User.find({}, {
+            _id: 0,
+            nombre: 1,
+            apellido: 1,
+            user: 1,
+            estado: 1,
+            rol: 1,
+            email: 1,
+            createdAt: 1
+        });
         return users;
     } catch (error) {
         console.error(error);
