@@ -1,5 +1,6 @@
 const login = require('../controllers/login/login');
-const Usaurios = require('../controllers/user/user.controller');
+const Usaurios = require('../controllers/user/registrarUsuario');
+const usuario = require('../controllers/user/user')
 const permisos = require('../controllers/permisos/permisos')
 const Company = require('../controllers/user/compania.controler')
 const Productos = require('../controllers/productos/productController');
