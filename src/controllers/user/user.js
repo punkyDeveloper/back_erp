@@ -31,9 +31,17 @@ exports.createUser = async (req, res) => {
 // Obtener todos los usuarios
 exports.getUsers = async (req, res) => {    
     try {
-        const users = await User.find({},{_id:0, __v:0, password:0});
-
-        res.json(users);
+        const users = await User.find({}, {
+            _id: 0,
+            nombre: 1,
+            apellido: 1,
+            user: 1,
+            estado: 1,
+            rol: 1,
+            email: 1,
+            createdAt: 1
+        });
+        return users;
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Error al obtener los usuarios' });
