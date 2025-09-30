@@ -2,31 +2,27 @@ const User = require('../../moduls/user');
 
 // Crear un nuevo usuario
 
-exports.createUser = async (req, res) => {
+function createUser({ name, email, rol_id, user, apellido, password }) {
     try {
-        const { name, email, password } = req.body;
-    
-        // Validar que se reciban todos los datos necesarios
-        if (!name || !email || !password) {
-        return res.status(400).json({ msg: 'Ingresa los datos completos' });
-        }
-    
         // Crear un nuevo usuario
         const newUser = new User({
-        name,
-        email,
-        password,
+            nombre: name,
+            email,
+            password,
+            rol: rol_id,
+            user,
+            apellido,
+            estado: true
         });
-    
+
         // Guardar el usuario en la base de datos
-        await newUser.save();
-    
-        res.json({ msg: 'Usuario creado' });
+        return newUser.save();
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Error al crear el usuario' });
+        console.error('Error al crear el usuario:', error);
+        throw new Error('Error interno del servidor');
     }
 }
+
 
 // Obtener todos los usuarios
 exports.getUsers = async (req, res) => {    
@@ -47,3 +43,5 @@ exports.getUsers = async (req, res) => {
         res.status(500).json({ msg: 'Error al obtener los usuarios' });
     }
 }
+
+exports.registrar = createUser;

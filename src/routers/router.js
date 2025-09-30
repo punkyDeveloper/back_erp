@@ -2,11 +2,11 @@
 const express = require('express');
 const login = require('../controllers/login/login');
 const Usaurios = require('../controllers/user/registrarUsuario');
-const usuario = require('../controllers/user/user');
+const usuario = require('../controllers/user/user.controller');
 const permisos = require('../controllers/permisos/permisos');
 const apiKeyMiddleware = require('../middleware/apiKey');
 const Role = require('../controllers/roles/roles');
-// const Company = require('../controllers/user/compania.controler');
+const Company = require('../controllers/user/compania.controler');
 const Productos = require('../controllers/productos/productController');
 
 const router = express.Router();
@@ -32,7 +32,7 @@ router.post("/roles", Role.roleCreate);
 router.get("/roles", Role.getRoles);
 
 // ====== Compañías ======
-// router.post("/companias", Company.createCompany);
+router.post("/companias", Company.createCompany);
 
 // ====== Productos ======
 router.post("/productos", Productos.createProduct);
