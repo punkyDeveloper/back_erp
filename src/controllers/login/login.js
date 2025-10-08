@@ -1,64 +1,119 @@
-const User = require('../../moduls/user'); // Ajusta la ruta si es necesario
+const User = require('../../moduls/user');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+/**
+ * Controlador de login de usuarios
+ * @param {Object} req - Request object
+ * @param {Object} res - Response object
+ */
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Validación de campos requeridos
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        msg: "Por favor ingresa todos los campos" 
+        message: "Email y contraseña son requeridos"
       });
     }
 
-    const user = await User.findOne({ email, password });
+    // Validación básica de formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Formato de email inválido"
+      });
+    }
+
+    // Buscar usuario por email (sin incluir password en la query)
+    const user = await User.findOne({ email }).select('+password');
+
     if (!user) {
-      return res.status(400).json({ 
+      return res.status(401).json({
         success: false,
-        msg: "El usuario no existe" 
+        message: "Credenciales incorrectas"
       });
     }
 
-    // Verificar contraseña (si quieres activarlo con bcrypt)
-    // const isMatch = await bcrypt.compare(password, user.password);
-    // if (!isMatch) {
-    //   return res.status(400).json({ 
-    //     success: false,
-    //     msg: "Contraseña incorrecta" 
-    //   });
-    // }
+    // Verificar contraseña con bcrypt
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Credenciales incorrectas"
+      });
+    }
 
+    // Verificar si el usuario está activo
+    if (!user.estado) {
+      return res.status(403).json({
+        success: false,
+        message: "Usuario inactivo. Contacta al administrador"
+      });
+    }
+
+    // Verificar que el usuario tenga una compañía asignada
+    if (!user.compania) {
+      return res.status(400).json({
+        success: false,
+        message: "El usuario no tiene una compañía asignada"
+      });
+    }
+
+    // Crear payload para el token
     const payload = {
-      user: { id: user.id }
+      id: user._id.toString(),
+      compania: user.compania.toString(),
+      rol: user.rol
     };
 
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: 3600 }, (err, token) => {
-      if (err) throw err;
+    // Generar token JWT (usando promesas)
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRATION || '1h' }
+    );
 
-      // Guardar el token en cookie
-      res.cookie("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 3600 * 1000 // 1 hora
-      });
+    // Configuración de cookies
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 3600000 // 1 hora en milisegundos
+    };
 
-      // Enviar token + estado en JSON
-      res.json({
-        success: true,
-        msg: "Login exitoso",
-        token
-      });
+    // Establecer cookies
+    res.cookie('token', token, cookieOptions);
+    res.cookie('companiaId', user.compania.toString(), cookieOptions);
+
+    // Respuesta exitosa (sin enviar el token en el body si ya está en cookie)
+    return res.status(200).json({
+      success: true,
+      message: "Login exitoso",
+      data: {
+        id: user._id,
+        nombre: user.nombre || user.user, // Adaptable según tu modelo
+        email: user.email,
+        rol: user.rol,
+        companiaId: user.compania
+      }
     });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ 
+    console.error('Error en login:', error);
+    
+    // No exponer detalles del error en producción
+    const message = process.env.NODE_ENV === 'production'
+      ? "Error en el servidor"
+      : error.message;
+
+    return res.status(500).json({
       success: false,
-      msg: "Error en el servidor" 
+      message
     });
   }
 };
