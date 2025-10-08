@@ -40,4 +40,5 @@ router.post("/productos", upload.single("img"),uploadToCloudinary ,Productos.cre
 router.get("/productos", Productos.getProducts);
 router.get("/productos/:companyId", Productos.getProductsByCompany);
 
+
 module.exports = router;
