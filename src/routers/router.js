@@ -22,6 +22,7 @@ router.post('/login', apiKeyMiddleware, login.login);
 router.post("/usuario", usuario.createUser);
 router.get("/usuarios", usuario.getUsers);
 router.put("/usuario/:id", usuario.updateUser);
+router.delete("/usuario/:id", usuario.deleteUser);
 
 // ====== Permisos ======
 router.post("/permisos", permisos.permiso);
