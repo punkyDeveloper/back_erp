@@ -1,5 +1,5 @@
 const User = require('../../moduls/user');
-const bcrypt = require('bcryptjs');
+const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
@@ -39,8 +39,8 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Verificar contraseña con bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Verificar contraseña con Argon2id
+    const isPasswordValid = await argon2.verify(user.password, password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,

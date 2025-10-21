@@ -1,7 +1,6 @@
 
 const express = require('express');
 const login = require('../controllers/login/login');
-const Usaurios = require('../controllers/user/registrarUsuario');
 const usuario = require('../controllers/user/user.controller');
 const permisos = require('../controllers/permisos/permisos');
 const Role = require('../controllers/roles/roles');
@@ -20,8 +19,10 @@ router.get('/role', Role.getRoles);
 router.post('/login', apiKeyMiddleware, login.login);
 
 // ====== Usuarios ======
-router.post("/usuario", Usaurios.createUser);
+router.post("/usuario", usuario.createUser);
 router.get("/usuarios", usuario.getUsers);
+router.put("/usuario/:id", usuario.updateUser);
+router.delete("/usuario/:id", usuario.deleteUser);
 
 // ====== Permisos ======
 router.post("/permisos", permisos.permiso);
