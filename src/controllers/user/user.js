@@ -8,6 +8,7 @@ require('dotenv').config();
  */
 async function createUser({ name, email, rol_id, user, apellido, compania, hashedPassword, passwordPlain }) {
   try {
+    console.log('Creando usuario con datos:', { name, email, rol_id, user, apellido, compania });
     // Crear un nuevo usuario
     const newUser = new User({
       nombre: name,
@@ -108,10 +109,33 @@ async function deleteUser(id) {
         throw error;
     }
 }
+// solo administradores ver
+
+async  function getAdministradores() {
+    try {
+        const admins = await User.find({ rol: 'Administrador' }, {
+            _id: 1,
+            nombre: 1,
+            apellido: 1,
+            user: 1,
+            estado: 1,
+            rol: 1,
+            email: 1,
+            createdAt: 1,
+            compania: 1
+        });
+        return admins;
+    } catch (error) {
+        console.error(error);
+        throw new Error('Error al obtener los administradores');
+    }
+}
+
 // Controladores para las rutas
 module.exports = {
     createUser,
     updateUser,
     getUsers,
-    deleteUser
+    deleteUser,
+    getAdministradores
 };

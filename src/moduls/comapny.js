@@ -17,6 +17,11 @@ const SchemaCompani = new mongodb.Schema({
         required: true,
         trim: true,
     },
+    dv: {
+        type: String,
+        trim: true,
+        required: true,
+    }
     
 }, {timestamps: true});
 
