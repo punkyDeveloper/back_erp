@@ -23,6 +23,7 @@ router.post("/usuario", usuario.createUser);
 router.get("/usuarios", usuario.getUsers);
 router.put("/usuario/:id", usuario.updateUser);
 router.delete("/usuario/:id", usuario.deleteUser);
+router.get("/administradores", usuario.getAdministradores);
 
 // ====== Permisos ======
 router.post("/permisos", permisos.permiso);

@@ -1,6 +1,6 @@
 const Oganizacion = require("../../moduls/comapny");
 
-function Compania({ email, nit, nombreCompany }) {
+function Compania({ email, nit, nombreCompany, dv }) {
     try {
         // Crear una nueva compañía
         const nuevaCompania = new Oganizacion({
@@ -8,6 +8,7 @@ function Compania({ email, nit, nombreCompany }) {
             nit,
             nombreCompany,
             estado: true,
+            dv
         });
 
         // Guardar la compañía en la base de datos

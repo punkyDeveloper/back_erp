@@ -1,4 +1,4 @@
-const { createUser, getUsers, updateUser } = require('./user');
+const { createUser, getUsers, updateUser, getAdministradores } = require('./user');
 const argon2 = require('argon2');
 
 /**
@@ -6,46 +6,48 @@ const argon2 = require('argon2');
  */
 exports.createUser = async (req, res) => {
   try {
-    const { name, email, rol_id, user, apellido, compania } = req.body;
 
-    // Validar que se reciban todos los datos necesarios
-    if (!name || !email || !rol_id || !user || !apellido || !compania) {
-      return res.status(400).json({ msg: 'Ingresa los datos completos' });
-    }
-
-    // Crear contraseña aleatoria
-    function generateRandomPassword(length) {
-      const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let password = '';
-      for (let i = 0; i < length; i++) {
-        const randomIndex = Math.floor(Math.random() * characters.length);
-        password += characters[randomIndex];
+      const { name, email, rol_id, user, apellido, compania } = req.body;
+  
+      // Validar que se reciban todos los datos necesarios
+      if (!name || !email || !rol_id || !user || !apellido || !compania) {
+        return res.status(400).json({ msg: 'Ingresa los datos completos' });
       }
-      return password;
-    }
-    
-    const password = generateRandomPassword(8);
+  
+      // Crear contraseña aleatoria
+      function generateRandomPassword(length) {
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let password = '';
+        for (let i = 0; i < length; i++) {
+          const randomIndex = Math.floor(Math.random() * characters.length);
+          password += characters[randomIndex];
+        }
+        return password;
+      }
+      
+      const password = generateRandomPassword(8);
+  
+      // Encriptar la contraseña con Argon2id
+      const hashedPassword = await argon2.hash(password, { type: argon2.argon2id });
+  
+      // Crear el usuario y enviar el correo
+      await createUser({ 
+        name, 
+        email, 
+        rol_id, 
+        user, 
+        apellido, 
+        compania, 
+        hashedPassword,
+        passwordPlain: password // Pasar la contraseña en texto plano para el correo
+      });
+  
+      res.send({ 
+        msg: 'Usuario creado y correo enviado', 
+        password, 
+        email 
+      });
 
-    // Encriptar la contraseña con Argon2id
-    const hashedPassword = await argon2.hash(password, { type: argon2.argon2id });
-
-    // Crear el usuario y enviar el correo
-    await createUser({ 
-      name, 
-      email, 
-      rol_id, 
-      user, 
-      apellido, 
-      compania, 
-      hashedPassword,
-      passwordPlain: password // Pasar la contraseña en texto plano para el correo
-    });
-
-    res.send({ 
-      msg: 'Usuario creado y correo enviado', 
-      password, 
-      email 
-    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al crear el usuario' });
@@ -95,5 +97,17 @@ exports.deleteUser = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ msg: 'Error al eliminar el usuario' });
+    }
+}
+
+// solo ver administradores
+exports.getAdministradores = async (req, res) => {
+    try {
+        const users = await getAdministradores();
+
+        res.json(users);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Error al obtener los administradores' });
     }
 }
