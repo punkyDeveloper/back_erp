@@ -19,7 +19,7 @@ const router = express.Router();
 router.get("/token", tokenController.generateToken);
 
 // ====== Login (sin protección) ======
-router.post('/login', apiKeyMiddleware, login.login);
+router.post('/login', login.login);
 
 // ====== Obtener permisos del usuario logueado ======
 // En routers/router.js
