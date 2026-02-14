@@ -13,6 +13,14 @@ exports.createUser = async (req, res) => {
       if (!name || !email || !rol_id || !user || !apellido || !compania) {
         return res.status(400).json({ msg: 'Ingresa los datos completos' });
       }
+      // validar que no exista el email en la db
+      const existingUsers = await getUsers();
+      const emailExists = existingUsers.some(u => u.email === email);
+      if (emailExists) {
+        console.log('El correo ya está en uso:', email);
+        return res.status(400).json({ msg: 'El correo ya está en uso' });
+      }
+
   
       // Crear contraseña aleatoria
       function generateRandomPassword(length) {

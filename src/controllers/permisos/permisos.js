@@ -1,24 +1,28 @@
 const Permiso = require('../../moduls/permission');
 
 // Crear un permiso
-exports.permiso = (req, res) => {
+exports.permiso = async (req, res) => {
   try {
-    const { nombre, descripcion, accion } = req.body;
-    if (!nombre || !descripcion || !accion) {
+    const { nombre, modulo, descripcion, accion } = req.body;
+
+    if (!nombre || !modulo || !descripcion || !accion) {
       return res.status(400).json({ msg: 'Ingresa los datos completos' });
     }
+
     const newPermiso = new Permiso({
       nombre,
+      modulo,
       descripcion,
       accion,
     });
-    newPermiso.save();
+
+    await newPermiso.save();
     res.json({ msg: 'Permiso creado' });
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).json({ msg: error.message });
   }
 };
-
 // Obtener todos los permisos
 exports.getPermisos = async (req, res) => {
   try {

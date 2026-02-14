@@ -1,4 +1,5 @@
 const User = require('../../moduls/user');
+const compania = require('../../moduls/comapny');
 const argon2 = require('argon2');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -64,9 +65,22 @@ exports.login = async (req, res) => {
       });
     }
 
+    // Nomnre de la comapñia podría ser útil en el payload
+    const company = await compania.findById(user.compania);
+    const nombreCompany = company ? company.nombreCompany : null;
+
+    if (!company || !nombreCompany) {
+      return res.status(400).json({
+        success: false,
+        message: "Compañía del usuario no encontrada"
+      });
+    } 
+
+
     // Crear payload para el token
     const payload = {
       id: user._id.toString(),
+      nombre: user.nombre + " " + user.apellido,
       compania: user.compania.toString(),
       rol: user.rol
     };
@@ -95,11 +109,11 @@ exports.login = async (req, res) => {
       success: true,
       message: "Login exitoso",
       data: {
-        id: user._id,
-        nombre: user.nombre || user.user, // Adaptable según tu modelo
+        nombre: user.nombre, 
         email: user.email,
         rol: user.rol,
-        companiaId: user.compania
+        token,
+        nombreCompany
       }
     });
 

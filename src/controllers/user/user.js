@@ -8,7 +8,7 @@ require('dotenv').config();
  */
 async function createUser({ name, email, rol_id, user, apellido, compania, hashedPassword, passwordPlain }) {
   try {
-    console.log('Creando usuario con datos:', { name, email, rol_id, user, apellido, compania });
+    
     // Crear un nuevo usuario
     const newUser = new User({
       nombre: name,

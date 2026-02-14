@@ -40,3 +40,15 @@ exports.createCompany = async (req, res) => {
     res.status(500).json({ msg: 'Error al crear la compañía' });
   }
 };
+
+// Validar ID de compañía
+exports.validarCompaniaId = async (req, res) => {
+  try {
+    const { companiaId } = req.params;
+    const isValid = await Compania.validarCompaniaId(companiaId);
+    res.json({ valid: isValid });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al validar la compañía' });
+  }
+}
