@@ -9,7 +9,8 @@ const Productos = require('../controllers/productos/productController');
 const tokenController = require('../controllers/token/tokenController');
 // movimientos
 const Movimientos = require('../controllers/tipo_movimiento/tipo_movimiento');
-
+// servicios
+const servicios = require('../controllers/servicios/categorias');
 const apiKeyMiddleware = require('../middleware/apiKey');
 const authMiddleware = require('../middleware/authMiddleware');
 const {upload, uploadToCloudinary} = require('../middleware/imagen');
@@ -76,6 +77,9 @@ router.get("/productos/:companyId", authMiddleware, permisosMiddleware.hasPermis
 // ====== Movimientos ======
 router.post("/movimientos", authMiddleware, permisosMiddleware.hasPermission('crear_movimientos'), Movimientos.createMovimiento);
 router.get("/movimientos", authMiddleware, permisosMiddleware.hasPermission('ver_movimientos'), Movimientos.getMovimientos);
-// router.get("/movimientos/:companyId", authMiddleware, permisosMiddleware.hasPermission('ver_movimientos'), Movimientos.getMovimientosByCompany);
 
+// ====== Servicios ======
+// router.post("/servicios", authMiddleware, permisosMiddleware.hasPermission('crear_servicios'), servicios.postServicios);
+// router.get("/servicios", authMiddleware, permisosMiddleware.hasPermission('ver_servicios'), servicios.getServicios);
+// router.delete("/servicios/:id", authMiddleware, permisosMiddleware.hasPermission('eliminar_servicios'), servicios.deleteServicio);
 module.exports = router;
