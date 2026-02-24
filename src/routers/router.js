@@ -7,6 +7,8 @@ const Role = require('../controllers/roles/roles');
 const Company = require('../controllers/user/compania.controler');
 const Productos = require('../controllers/productos/productController');
 const tokenController = require('../controllers/token/tokenController');
+// dashboard
+const DashboardController = require('../controllers/dashboard/dashboardController');
 // movimientos
 const Movimientos = require('../controllers/tipo_movimiento/tipo_movimiento');
 // servicios
@@ -79,7 +81,10 @@ router.post("/movimientos", authMiddleware, permisosMiddleware.hasPermission('cr
 router.get("/movimientos", authMiddleware, permisosMiddleware.hasPermission('ver_movimientos'), Movimientos.getMovimientos);
 
 // ====== Servicios ======
-// router.post("/servicios", authMiddleware, permisosMiddleware.hasPermission('crear_servicios'), servicios.postServicios);
-// router.get("/servicios", authMiddleware, permisosMiddleware.hasPermission('ver_servicios'), servicios.getServicios);
-// router.delete("/servicios/:id", authMiddleware, permisosMiddleware.hasPermission('eliminar_servicios'), servicios.deleteServicio);
+router.post("/servicios", authMiddleware, permisosMiddleware.hasPermission('crear_servicios'), servicios.crearServiciosSupservicio);
+router.get("/servicios", authMiddleware, permisosMiddleware.hasPermission('ver_servicios'), servicios.getServicios);
+router.put("/servicios/:id", authMiddleware, permisosMiddleware.hasPermission('editar_servicios'), servicios.editarServicioSupservicio);
+
+//  ====== Dashboard ======
+router.get("/dashboard/finanzas", authMiddleware, permisosMiddleware.hasPermission('ver_dashboard'), DashboardController.getDashboardFinanzas);
 module.exports = router;

@@ -1,14 +1,41 @@
 const SubServicio = require('../../moduls/supServicios');
 
-// Función interna para crear
-exports.crearSupServicio = async (data, userId, company) => {
-  const nuevoSupServicio = new SubServicio({
-    ...data,
-    createdBy: userId,
-    company: company
-  });
-  await nuevoSupServicio.save();
-  return nuevoSupServicio;
+exports.postSupServicios = async (req, res) => {
+  try {
+    const { supnombre, suptiempo, supvalor, descripcion } = req.body;
+
+    console.log('📥 Datos subservicio:', { supnombre, suptiempo, supvalor });
+
+    if (!supnombre || !suptiempo || !supvalor) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Por favor, completa todos los campos del subservicio' 
+      });
+    }
+
+    const subServicioCreado = await SubServicio.create({
+      supnombre,
+      suptiempo,
+      supvalor,
+      descripcion: descripcion || ''
+    });
+
+    console.log('✅ SubServicio creado con ID:', subServicioCreado._id);
+
+    res.status(201).json({ 
+      success: true,
+      data: subServicioCreado
+    });
+
+  } catch (error) {
+    console.error('❌ Error al crear subservicio:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// ✅ Función interna para que categorias.js pueda crear subservicios
+exports.crearSupServicio = async (data) => {
+  return await SubServicio.create(data);
 };
 
 // POST /api/sub-servicios
@@ -62,18 +89,8 @@ exports.getSupServicioPorId = async (req, res) => {
 };
 
 // PUT /api/sub-servicios/:id
-exports.putSupServicios = async (req, res) => {
-  try {
-    const subServicio = await SubServicio.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-    if (!subServicio) return res.status(404).json({ success: false, error: 'No encontrado' });
-    res.status(200).json({ success: true, data: subServicio });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
+exports.actualizarSupServicio = async (id, data) => {
+  return await SubServicio.findByIdAndUpdate(id, data, { new: true });
 };
 
 // DELETE /api/sub-servicios/:id

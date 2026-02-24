@@ -3,16 +3,21 @@ const mongodb = require('../db/mongodb');
 const SchemaSupServicios = new mongodb.Schema({
     supnombre: {
         type: String,
-        required: [true, 'Se requiere un nombre para el subservicio'],
+
     },
     suptiempo: {
-        type: Number,
-        required: [true, 'Se requiere un tiempo para el subservicio'],
+        type: String,
+
     },
     supvalor: {
         type: Number,
-        required: [true, 'Se requiere un valor para el subservicio'],
-    }
+
+    },
+    descripcion: {
+        type: String,
+        default: ''
+    },
+    compania: { type: mongodb.Schema.Types.ObjectId, ref: 'Company', required: true }
 }, { timestamps: true });
 
 const SupServicios = mongodb.model('SupServicios', SchemaSupServicios);
