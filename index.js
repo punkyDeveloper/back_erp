@@ -20,3 +20,5 @@ app.use('/v1/', router);
 app.listen(PORT, () => {
     console.log(`Conectado en el puerto ${PORT}`);
 });
+
+module.exports = app; 

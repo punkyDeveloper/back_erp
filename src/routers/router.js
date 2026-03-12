@@ -16,6 +16,8 @@ const servicios = require('../controllers/servicios/categorias');
 const apiKeyMiddleware = require('../middleware/apiKey');
 const authMiddleware = require('../middleware/authMiddleware');
 const {upload, uploadToCloudinary} = require('../middleware/imagen');
+// clientes
+const Clientes = require('../controllers/clientes/clienste.controler');
 
 const router = express.Router();
 
@@ -87,4 +89,10 @@ router.put("/servicios/:id", authMiddleware, permisosMiddleware.hasPermission('e
 
 //  ====== Dashboard ======
 router.get("/dashboard/finanzas", authMiddleware, permisosMiddleware.hasPermission('ver_dashboard'), DashboardController.getDashboardFinanzas);
+
+// ====== Clientes  ======
+router.post("/clientes", authMiddleware, permisosMiddleware.hasPermission('crear_cliente'), Clientes.createCliente);
+router.get("/clientes", authMiddleware, permisosMiddleware.hasPermission('ver_clientes'), Clientes.getClientes);
+router.put("/clientes/:id", authMiddleware, permisosMiddleware.hasPermission('editar_cliente'), Clientes.updateCliente);
+router.delete("/clientes/:id", authMiddleware, permisosMiddleware.hasPermission('eliminar_cliente'), Clientes.deleteCliente);
 module.exports = router;
