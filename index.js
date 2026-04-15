@@ -9,6 +9,7 @@ dotenv.config();
 const app = express();
 
 const router = require('./src/routers/router');
+const { connectDB } = require('./src/db/mongodb');
 
 // ── Seguridad: cabeceras HTTP (XSS, clickjacking, MIME sniffing, etc.) ─────────
 app.use(helmet());
@@ -37,13 +38,26 @@ app.use(express.urlencoded({ limit: '1mb', extended: true }));
 // ── Logging ─────────────────────────────────────────────────────────────────────
 app.use(morgan('tiny'));
 
-// ── Rutas ────────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3002;
+// ── Middleware: conectar a MongoDB antes de cada request (con caché) ────────────
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Error de conexión a MongoDB:', error.message);
+    res.status(503).json({ success: false, message: 'Servicio no disponible. Error de base de datos.' });
+  }
+});
 
+// ── Rutas ────────────────────────────────────────────────────────────────────────
 app.use('/v1/', router);
 
-app.listen(PORT, () => {
+// ── Servidor local (no se ejecuta en Vercel) ─────────────────────────────────────
+if (process.env.NODE_ENV !== 'production' || process.env.LOCAL_SERVER === 'true') {
+  const PORT = process.env.PORT || 3002;
+  app.listen(PORT, () => {
     console.log(`Conectado en el puerto ${PORT}`);
-});
+  });
+}
 
 module.exports = app;
