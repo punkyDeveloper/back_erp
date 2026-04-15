@@ -1,44 +1,51 @@
-const {crearProducto, getProducts, getProductsByCompany} = require('./produc');
+const { crearProducto, getProductsByCompany, editarProducto, eliminarProducto } = require('./produc');
 
-// Crear un nuevo producto
 exports.createProduct = async (req, res) => {
-    try {
-      console.log(req.body);
-        const { name, description, price,venta,alquiler, img, compania, stock } = req.body;
-        // Validar que se reciban todos los datos necesarios
-        if (!name || !description || !price || !venta || !alquiler || !compania || !stock) {
-            return res.status(400).json({ msg: 'Ingresa los datos completos' });
-        }
-          // Multer te da acceso al archivo en req.file
-        if (!req.file) {
-          return res.status(400).json({ error: "Se requiere una imagen" });
-        }
-        // const imageUrl = req.file.path;
-        const imageUrl = req.file?.cloudinaryUrl;
-        // Crear un nuevo producto
-        await crearProducto({ name, description, price,venta,alquiler, img: imageUrl, compania, stock });
+  try {
+    const companiaId = req.user.compania;
+    if (!companiaId) return res.status(403).json({ msg: 'Sin compañía en el token' });
 
-        res.json({ msg: 'Producto creado' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ msg: 'Error al crear el producto' });
+    const { name, description, price, venta, alquiler, stock } = req.body;
+
+    if (!name || !description || !price || !stock) {
+      return res.status(400).json({ msg: 'name, description, price y stock son requeridos' });
     }
-}
 
+    const imageUrl     = req.file?.cloudinaryUrl || null;
+    const ventaBool    = venta    === 'true' || venta    === true;
+    const alquilerBool = alquiler === 'true' || alquiler === true;
 
-// traer todos los productos
+    const producto = await crearProducto({
+      name,
+      description,
+      price:    Number(price),
+      stock:    Number(stock),
+      venta:    ventaBool,
+      alquiler: alquilerBool,
+      img:      imageUrl,
+      compania: companiaId,
+    });
+
+    res.status(201).json(producto);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al crear el producto' });
+  }
+};
 
 exports.getProducts = async (req, res) => {
   try {
-    const products = await getProducts();
+    const companiaId = req.user.compania;
+    if (!companiaId) return res.status(403).json({ msg: 'Sin compañía en el token' });
+
+    const products = await getProductsByCompany(companiaId);
     res.json(products);
   } catch (error) {
     console.error(error);
     res.status(500).json({ msg: 'Error al obtener los productos' });
   }
-}
+};
 
-// traer productos por id de compañia
 exports.getProductsByCompany = async (req, res) => {
   try {
     const { companyId } = req.params;
@@ -48,4 +55,41 @@ exports.getProductsByCompany = async (req, res) => {
     console.error(error);
     res.status(500).json({ msg: 'Error al obtener los productos por compañía' });
   }
-}
+};
+
+exports.updateProduct = async (req, res) => {
+  try {
+    const companiaId = req.user.compania;
+    const { id }     = req.params;
+    const { name, description, price, venta, alquiler, stock } = req.body;
+
+    const update = { compania: companiaId };
+    if (name        !== undefined) update.name        = name;
+    if (description !== undefined) update.description = description;
+    if (price       !== undefined) update.price       = Number(price);
+    if (stock       !== undefined) update.stock       = Number(stock);
+    if (venta       !== undefined) update.venta       = venta    === 'true' || venta    === true;
+    if (alquiler    !== undefined) update.alquiler    = alquiler === 'true' || alquiler === true;
+    if (req.file?.cloudinaryUrl)   update.img         = req.file.cloudinaryUrl;
+
+    const updated = await editarProducto(id, update);
+    if (!updated) return res.status(404).json({ msg: 'Producto no encontrado' });
+
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al editar el producto' });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await eliminarProducto(id);
+    if (!deleted) return res.status(404).json({ msg: 'Producto no encontrado' });
+    res.json({ msg: 'Producto eliminado' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: 'Error al eliminar el producto' });
+  }
+};

@@ -6,8 +6,9 @@ exports.nuevoServicio = async (data) => {
 };
 
 // ✅ Función interna para categorias.js - GET por compania
-exports.getServicios = async (user) => {
+exports.getServicios = async (user, soloConValor = false) => {
   const filtro = user.rol === 'master' ? {} : { compania: user.compania };
+  if (soloConValor) filtro.valor = { $gt: 1 };
   return await Servicio.find(filtro)
     .populate('idSupservicios')
     .sort({ createdAt: -1 });

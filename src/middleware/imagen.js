@@ -50,17 +50,27 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // máximo 5MB
 });
 
-// 🔹 Middleware para subir la imagen a Cloudinary después de multer
+// Middleware para subir la imagen a Cloudinary después de multer
 const uploadToCloudinary = async (req, res, next) => {
   if (!req.file) return next();
 
   try {
     const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'productos'
+      folder: 'productos',
+      resource_type: 'image',           // Solo imágenes
+      allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      max_bytes: 5 * 1024 * 1024,       // 5 MB máximo en Cloudinary también
+      overwrite: false,
+      unique_filename: true,
     });
 
     // Borrar imagen local después de subir
     fs.unlinkSync(req.file.path);
+
+    // Validar que la URL sea HTTPS (siempre debería serlo con Cloudinary)
+    if (!result.secure_url) {
+      throw new Error('Cloudinary no devolvió una URL segura');
+    }
 
     // Guardar info en request para usar en el controlador
     req.file.cloudinaryUrl = result.secure_url;
@@ -68,8 +78,12 @@ const uploadToCloudinary = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Error al subir la imagen a Cloudinary' });
+    // Limpiar archivo local si falla la subida
+    if (req.file?.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    console.error('[uploadToCloudinary]', error);
+    return res.status(500).json({ error: 'Error al subir la imagen' });
   }
 };
 

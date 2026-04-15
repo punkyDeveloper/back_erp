@@ -38,6 +38,14 @@ const clienteSchema = new mongoose.Schema(
     // "ver_web" cuando tiene acceso, "" cuando no
     permiso: { type: String, default: "" },
 
+    // Vehículos / motos del cliente (pueden ser varios)
+    motos: [
+      {
+        placa:    { type: String, default: "" },
+        vehiculo: { type: String, default: "" }, // Marca, modelo y año. Ej: "Honda CB125F 2022"
+      }
+    ],
+
     activo: { type: Boolean, default: true },
   },
   { timestamps: true }

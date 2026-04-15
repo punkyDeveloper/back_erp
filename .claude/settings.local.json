@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(node --check index.js)",
+      "Bash(node --check src/routers/router.js)",
+      "Bash(node --check src/controllers/user/user.controller.js)",
+      "Bash(node --check src/middleware/apiKey.js)",
+      "Bash(node --check src/middleware/imagen.js)",
+      "Bash(node -e \"const c=require\\('crypto'\\); console.log\\('JWT_SECRET='+c.randomBytes\\(32\\).toString\\('base64'\\)\\); console.log\\('API_KEY='+c.randomBytes\\(24\\).toString\\('base64'\\)\\); console.log\\('API_KEYY='+c.randomBytes\\(24\\).toString\\('base64'\\)\\);\")"
+    ]
+  }
+}

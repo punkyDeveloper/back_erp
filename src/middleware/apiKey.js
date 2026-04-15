@@ -1,12 +1,17 @@
 function checkApiKey(req, res, next) {
   try {
-    // Busca en headers o query
-    const apiKey = req.headers["x-api-key"] || req.query["x-api-key"] || req.headers["x-api-key-p"] || req.query["x-api-key-p"];
+    // La API key SOLO se acepta en el header — nunca en query params,
+    // ya que los query params quedan en logs de servidor, proxies e historial del navegador.
+    const apiKey = req.headers["x-api-key"];
 
-    const validKeys = [process.env.API_KEY, process.env.API_KEYY];
+    if (!apiKey) {
+      return res.status(403).json({ message: "Forbidden: API Key requerida" });
+    }
+
+    const validKeys = [process.env.API_KEY, process.env.API_KEYY].filter(Boolean);
 
     if (!validKeys.includes(apiKey)) {
-      return res.status(403).json({ message: "Forbidden: Invalid API Key" });
+      return res.status(403).json({ message: "Forbidden: API Key inválida" });
     }
 
     next();

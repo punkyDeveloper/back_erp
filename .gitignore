@@ -1,1 +1,28 @@
+# ── Variables de entorno (NUNCA subir al repo) ───────────────────────────────────
 .env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.staging
+
+# ── Dependencias ─────────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Archivos de subida temporales ────────────────────────────────────────────────
+src/uploads/
+
+# ── Logs ─────────────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+
+# ── Sistema operativo ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Editores / IDEs ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

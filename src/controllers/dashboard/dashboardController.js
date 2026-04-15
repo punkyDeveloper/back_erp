@@ -1,4 +1,5 @@
 const Movimiento = require('../../moduls/movimiento'); // ajusta la ruta
+const Mecanica   = require('../../moduls/mecanica');
 const mongoose   = require('mongoose');
 
 /* ══════════════════════════════════════════════════════════════
@@ -87,7 +88,9 @@ exports.getDashboardFinanzas = async (req, res) => {
       return res.status(400).json({ message: "Compania no encontrada en el token" });
     }
 
-    const periodo    = req.query.periodo || "anual";
+    // Whitelist para evitar inyección de valores arbitrarios en la lógica de fechas
+    const PERIODOS_VALIDOS = ["mensual", "trimestral", "anual"];
+    const periodo = PERIODOS_VALIDOS.includes(req.query.periodo) ? req.query.periodo : "anual";
     const companiaId = new mongoose.Types.ObjectId(compania);
 
     const { inicio, fin }             = getRango(periodo);
@@ -196,5 +199,105 @@ exports.getDashboardFinanzas = async (req, res) => {
   } catch (error) {
     console.error("[Dashboard Finanzas]", error.message);
     return res.status(500).json({ message: "Error al obtener datos financieros" });
+  }
+};
+
+/* ══════════════════════════════════════════════════════════════
+   GET /api/v1/dashboard/mecanica
+
+   Respuesta:
+   {
+     kpis: { serviciosMes, ticketPromedio, vehiculosAtendidos },
+     servicios: [{ nombre, cantidad }],
+     tipos: [{ name, value, color }],
+     recientes: [{ _id, cliente, vehiculo, placa, servicio, costo, estado, fecha }]
+   }
+══════════════════════════════════════════════════════════════ */
+const TIPO_COLORS = {
+  Preventivo: "#6366f1",
+  Correctivo: "#f97316",
+  Predictivo: "#10b981",
+  "Garantía": "#eab308",
+};
+
+exports.getDashboardMecanica = async (req, res) => {
+  try {
+    const companiaId = req.user?.compania || req.user?.empresa;
+    if (!companiaId) return res.status(400).json({ message: "Compania no encontrada en el token" });
+
+    const ahora     = new Date();
+    const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+    const finMes    = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59);
+    const cid       = String(companiaId);
+
+    /* ── 1. KPIs del mes ─────────────────────────────────── */
+    const [kpiAgg] = await Mecanica.aggregate([
+      { $match: { companiaId: cid, fecha: { $gte: inicioMes, $lte: finMes } } },
+      {
+        $group: {
+          _id: null,
+          serviciosMes:       { $sum: 1 },
+          sumaIngresos:       { $sum: { $cond: [{ $ne: ["$tipo", "Garantía"] }, "$costoCliente", 0] } },
+          vehiculosAtendidos: { $addToSet: "$placa" },
+        },
+      },
+    ]);
+
+    const serviciosMes       = kpiAgg?.serviciosMes       ?? 0;
+    const sumaIngresos       = kpiAgg?.sumaIngresos        ?? 0;
+    const vehiculosAtendidos = kpiAgg?.vehiculosAtendidos?.length ?? 0;
+    const ticketPromedio     = serviciosMes > 0 ? Math.round(sumaIngresos / serviciosMes) : 0;
+
+    /* ── 2. Top 5 servicios más solicitados (mes actual) ── */
+    const serviciosAgg = await Mecanica.aggregate([
+      { $match: { companiaId: cid, fecha: { $gte: inicioMes, $lte: finMes } } },
+      { $unwind: { path: "$servicios", preserveNullAndEmptyArrays: false } },
+      { $group: { _id: "$servicios.nombre", cantidad: { $sum: 1 } } },
+      { $sort: { cantidad: -1 } },
+      { $limit: 5 },
+      { $project: { _id: 0, nombre: "$_id", cantidad: 1 } },
+    ]);
+
+    /* ── 3. Distribución por tipo de mantenimiento (mes) ── */
+    const tiposAgg = await Mecanica.aggregate([
+      { $match: { companiaId: cid, fecha: { $gte: inicioMes, $lte: finMes } } },
+      { $group: { _id: "$tipo", value: { $sum: 1 } } },
+      { $project: { _id: 0, name: "$_id", value: 1 } },
+    ]);
+
+    const tipos = tiposAgg.map((t) => ({
+      name:  t.name,
+      value: t.value,
+      color: TIPO_COLORS[t.name] || "#9ca3af",
+    }));
+
+    /* ── 4. Últimos 8 mantenimientos ─────────────────────── */
+    const recientesRaw = await Mecanica.find({ companiaId: cid })
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+
+    const recientes = recientesRaw.map((m) => ({
+      _id:      m._id,
+      cliente:  m.nombreCliente || m.cedula,
+      vehiculo: m.vehiculo,
+      placa:    m.placa,
+      servicio: (m.servicios?.[0]?.nombre) || m.descripcion?.slice(0, 40) || "—",
+      costo:    m.costoCliente ?? 0,
+      estado:   m.estado,
+      fecha:    m.fecha,
+    }));
+
+    res.set("Cache-Control", "no-store, no-cache, must-revalidate");
+    return res.status(200).json({
+      kpis: { serviciosMes, ticketPromedio, vehiculosAtendidos },
+      servicios: serviciosAgg,
+      tipos,
+      recientes,
+    });
+
+  } catch (error) {
+    console.error("[Dashboard Mecanica]", error.message);
+    return res.status(500).json({ message: "Error al obtener datos de mecánica" });
   }
 };

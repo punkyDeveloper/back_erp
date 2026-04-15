@@ -7,7 +7,7 @@ const productSchema = new mongoose.Schema({
   venta: { type: Boolean },    
   alquiler: { type: Boolean }, 
   img: { type: String },
-  stack: { type: Number, default: 0 },
+  stock: { type: Number, default: 0 },
   compania: { type: mongoose.Schema.Types.ObjectId, ref: "Company" }
 }, { timestamps: true });
 

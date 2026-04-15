@@ -19,8 +19,9 @@ exports.permiso = async (req, res) => {
     await newPermiso.save();
     res.json({ msg: 'Permiso creado' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ msg: error.message });
+    console.error('[permiso]', error);
+    // No exponer detalles internos del error al cliente
+    res.status(500).json({ msg: 'Error al crear el permiso' });
   }
 };
 // Obtener todos los permisos
@@ -29,18 +30,17 @@ exports.getPermisos = async (req, res) => {
     const permisos = await Permiso.find();
     res.json(permisos);
   } catch (error) {
-    console.log(error);
+    console.error('[getPermisos]', error);
+    res.status(500).json({ msg: 'Error al obtener los permisos' });
   }
 };
 // Obtener todos permiso por el nombre
 exports.getPermisoByName = async (req, res) => {
-try {
-
-  const permiso = await Permiso.find({},{nombre:1,_id:0});
-
-  res.json(permiso);
-  
-} catch (error) {
-  console.log(error);
-}
+  try {
+    const permiso = await Permiso.find({}, { nombre: 1, _id: 0 });
+    res.json(permiso);
+  } catch (error) {
+    console.error('[getPermisoByName]', error);
+    res.status(500).json({ msg: 'Error al obtener los permisos' });
+  }
 };

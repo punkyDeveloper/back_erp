@@ -9,7 +9,9 @@ const getClientes = async ({ empresa, activo, buscar }) => {
   }
 
   if (buscar) {
-    const regex = new RegExp(buscar, "i");
+    // Escapar caracteres especiales de regex para prevenir ReDoS
+    const escaped = buscar.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, "i");
     filtro.$or = [
       { nombre:          regex },
       { numeroDocumento: regex },

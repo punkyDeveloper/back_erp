@@ -1,32 +1,4 @@
-// controllers/token/tokenController.js
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
-
-exports.generateToken = async (req, res) => {
-  try {
-    const payload = {
-      id: "test-user-id",
-      nombre: "Test nombre",
-      compania: "test-compania-id",
-      rol: "Admin",
-      roleId: "test-role-id"
-    };
-
-    const token = jwt.sign(
-      payload,
-      process.env.JWT_SECRET,
-      // { expiresIn: '24h' }
-    );
-
-    return res.status(200).json({
-      success: true,
-      token
-    });
-
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Error al generar token"
-    });
-  }
-};
+// Este controlador fue eliminado por seguridad.
+// El endpoint GET /v1/token generaba tokens JWT con rol "Admin" hardcodeado
+// y sin expiración, sin requerir autenticación. Es una vulnerabilidad crítica.
+// La generación de tokens válidos ocurre ÚNICAMENTE en el login (/v1/login).
