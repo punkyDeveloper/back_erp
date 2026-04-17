@@ -3,16 +3,16 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const uri = process.env.MONGO_URI;
-
-if (!uri) {
-  throw new Error('MONGO_URI no está definida en las variables de entorno.');
-}
-
 // Cache de la conexión para reutilizarla entre invocaciones serverless
 let connectionPromise = null;
 
 const connectDB = async () => {
+  const uri = process.env.MONGO_URI;
+
+  if (!uri) {
+    throw new Error('MONGO_URI no está definida en las variables de entorno.');
+  }
+
   if (mongoose.connection.readyState === 1) {
     return mongoose;
   }

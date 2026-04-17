@@ -8,7 +8,9 @@
       "Bash(node --check src/middleware/apiKey.js)",
       "Bash(node --check src/middleware/imagen.js)",
       "Bash(node -e \"const c=require\\('crypto'\\); console.log\\('JWT_SECRET='+c.randomBytes\\(32\\).toString\\('base64'\\)\\); console.log\\('API_KEY='+c.randomBytes\\(24\\).toString\\('base64'\\)\\); console.log\\('API_KEYY='+c.randomBytes\\(24\\).toString\\('base64'\\)\\);\")",
-      "Bash(grep -n \"require.*db/mongodb\" c:/Users/elsan/OneDrive/Escritorio/back_erp/src/moduls/*.js)"
+      "Bash(grep -n \"require.*db/mongodb\" c:/Users/elsan/OneDrive/Escritorio/back_erp/src/moduls/*.js)",
+      "Bash(ls c:/Users/elsan/OneDrive/Escritorio/back_erp/*.json)",
+      "Bash(ls c:/Users/elsan/OneDrive/Escritorio/back_erp/*.lock)"
     ]
   }
 }
