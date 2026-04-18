@@ -1,5 +1,23 @@
 const MovimientoService = require('./movimineto');
 
+// ─── DELETE /v1/movimientos/:id ───────────────────────────────────────────────
+exports.deleteMovimiento = async (req, res) => {
+  try {
+    const companiaId = req.user.compania;
+    if (!companiaId)
+      return res.status(400).json({ msg: 'No se encontró la empresa del usuario' });
+
+    const doc = await MovimientoService.deleteMovimiento({ id: req.params.id, companiaId });
+    if (!doc)
+      return res.status(404).json({ msg: 'Movimiento no encontrado' });
+
+    return res.json({ ok: true, msg: 'Movimiento eliminado' });
+  } catch (e) {
+    console.error('[deleteMovimiento]', e);
+    return res.status(500).json({ msg: 'Error al eliminar movimiento' });
+  }
+};
+
 // ─── POST /v1/movimientos ─────────────────────────────────────────────────────
 exports.createMovimiento = async (req, res) => {
   try {

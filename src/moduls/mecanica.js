@@ -9,8 +9,15 @@ const servicioItemSchema = new mongoose.Schema({
 
 const productoItemSchema = new mongoose.Schema({
   nombre:      { type: String, required: true, trim: true },
-  precioVenta: { type: Number, default: 0, min: 0 }, // lo que paga el cliente
-  costo:       { type: Number, default: 0, min: 0 }, // costo real del mecánico
+  precioVenta: { type: Number, default: 0, min: 0 },
+  costo:       { type: Number, default: 0, min: 0 },
+  cantidad:    { type: Number, default: 1, min: 1 },
+}, { _id: false });
+
+const abonoItemSchema = new mongoose.Schema({
+  monto: { type: Number, required: true, min: 0 },
+  nota:  { type: String, default: '', trim: true },
+  fecha: { type: Date, default: Date.now },
 }, { _id: false });
 
 const mecanicaSchema = new mongoose.Schema({
@@ -38,6 +45,7 @@ const mecanicaSchema = new mongoose.Schema({
   // ── Items ───────────────────────────────────────────────────────────────────
   servicios: [servicioItemSchema],
   productos:  [productoItemSchema],
+  abonos:     [abonoItemSchema],
 
   // ── Totales (calculados en el servicio, nunca desde el front) ───────────────
   costoCliente:  { type: Number, default: 0, min: 0 },  // servicios + precioVenta productos

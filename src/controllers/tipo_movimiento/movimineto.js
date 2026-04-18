@@ -44,4 +44,10 @@ const getMovimientos = async ({ companiaId, tipo_movimiento, modulo }) => {
   return await Movimiento.find(filtro).sort({ fecha: -1 });
 };
 
-module.exports = { createMovimiento, getMovimientos };
+// ─── Eliminar movimiento por ID y empresa ─────────────────────────────────────
+const deleteMovimiento = async ({ id, companiaId }) => {
+  const doc = await Movimiento.findOneAndDelete({ _id: id, compania: companiaId });
+  return doc;
+};
+
+module.exports = { createMovimiento, getMovimientos, deleteMovimiento };

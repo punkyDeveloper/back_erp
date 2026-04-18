@@ -4,8 +4,8 @@ const MovimientoService = require("../tipo_movimiento/movimineto");
 // ─── Helper: calcula totales desde items ──────────────────────────────────────
 const calcularTotales = (servicios = [], productos = []) => {
   const totalServicios  = servicios.reduce((s, x) => s + (Number(x.precio) || 0), 0);
-  const totalVentaProds = productos.reduce((s, p) => s + (Number(p.precioVenta) || 0), 0);
-  const totalCostoProds = productos.reduce((s, p) => s + (Number(p.costo) || 0), 0);
+  const totalVentaProds = productos.reduce((s, p) => s + (Number(p.precioVenta) || 0) * (Number(p.cantidad) || 1), 0);
+  const totalCostoProds = productos.reduce((s, p) => s + (Number(p.costo) || 0) * (Number(p.cantidad) || 1), 0);
 
   const costoCliente  = totalServicios + totalVentaProds;
   const gananciaTotal = totalServicios + (totalVentaProds - totalCostoProds);
@@ -38,7 +38,7 @@ const getMantenimientos = async ({ companiaId, estado, page = 1, limit = 20 }) =
           $sum: {
             $cond: [
               { $and: [{ $eq: ["$estado", "Finalizado"] }, { $ne: ["$tipo", "Garantía"] }] },
-              "$costoCliente",
+              "$gananciaTotal",
               0,
             ],
           },
@@ -92,6 +92,7 @@ const crearMantenimiento = async ({ companiaId, datos }) => {
     tipoDocumentoCliente: datos.tipoDocumentoCliente   || "CC",
     servicios:  serviciosLimpios,
     productos:  productosLimpios,
+    abonos:     (datos.abonos || []).filter(a => Number(a.monto) > 0).map(a => ({ monto: Number(a.monto), nota: a.nota || '', fecha: a.fecha || new Date() })),
     costoCliente:  totalesLimpios.costoCliente,
     gananciaTotal: totalesLimpios.gananciaTotal,
   });
@@ -104,9 +105,11 @@ const actualizarMantenimiento = async ({ id, companiaId, datos }) => {
 
   const servicios = (datos.servicios ?? actual.servicios).filter(s => s.nombre && s.nombre.trim());
   const productos  = (datos.productos  ?? actual.productos ).filter(p => p.nombre && p.nombre.trim());
+  const abonos     = (datos.abonos     ?? actual.abonos    ).filter(a => Number(a.monto) > 0).map(a => ({ monto: Number(a.monto), nota: a.nota || '', fecha: a.fecha || new Date() }));
   const { costoCliente, gananciaTotal } = calcularTotales(servicios, productos);
   datos.servicios = servicios;
   datos.productos  = productos;
+  datos.abonos     = abonos;
 
   if (datos.placa) datos.placa = datos.placa.toUpperCase();
 
@@ -137,6 +140,15 @@ const finalizarMantenimiento = async ({ id, companiaId }) => {
     err.code = "YA_FINALIZADO"; throw err;
   }
 
+  // Validar que el total abonado cubra el costo al cliente
+  if (mecanica.costoCliente > 0) {
+    const totalAbonado = (mecanica.abonos || []).reduce((s, a) => s + (Number(a.monto) || 0), 0);
+    if (totalAbonado < mecanica.costoCliente) {
+      const err = new Error(`El cliente aún debe $${(mecanica.costoCliente - totalAbonado).toLocaleString('es-CO')}. Registra el pago completo antes de finalizar.`);
+      err.code = "PAGO_INCOMPLETO"; throw err;
+    }
+  }
+
   const esGarantia = mecanica.tipo === "Garantía";
 
   const movimiento = await MovimientoService.createMovimiento({
@@ -145,7 +157,7 @@ const finalizarMantenimiento = async ({ id, companiaId }) => {
     modulo:          "mecanica",
     tipo:            mecanica.tipo,
     descripcion:     `${mecanica.vehiculo} (${mecanica.placa}) — ${mecanica.descripcion}`,
-    valor:           mecanica.costoCliente,
+    valor:           esGarantia ? mecanica.costoCliente : mecanica.gananciaTotal,
     ganancia:        esGarantia ? mecanica.costoCliente : mecanica.gananciaTotal,
     fecha:           new Date(),
     nombre:          mecanica.nombreCliente || mecanica.cedula,

@@ -2,6 +2,7 @@ const { createUser, getUsers, updateUser, deleteUser, getAdministradores } = req
 const argon2 = require('argon2');
 const { body, validationResult } = require('express-validator');
 const User = require('../../moduls/user');
+const RolModel = require('../../moduls/rol');
 
 // ── Validaciones de creación de usuario ────────────────────────────────────────
 const createUserValidations = [
@@ -24,9 +25,6 @@ const createUserValidations = [
   body('rol_id')
     .notEmpty().withMessage('El rol es obligatorio')
     .isMongoId().withMessage('rol_id inválido'),
-  body('compania')
-    .notEmpty().withMessage('La compañía es obligatoria')
-    .isMongoId().withMessage('compania inválida'),
 ];
 
 /**
@@ -41,7 +39,20 @@ exports.createUser = [
         return res.status(400).json({ msg: 'Datos inválidos', errors: errors.array() });
       }
 
-      const { name, email, rol_id, user, apellido, compania } = req.body;
+      const { name, email, rol_id, user, apellido } = req.body;
+
+      // Tomar la compañía del token del admin logueado (nunca del body)
+      const compania = req.user.compania;
+      if (!compania) {
+        return res.status(400).json({ msg: 'No se pudo obtener la compañía del token. Vuelve a iniciar sesión.' });
+      }
+
+      // Resolver el ObjectId del rol al nombre real del rol
+      const rolDoc = await RolModel.findById(rol_id);
+      if (!rolDoc) {
+        return res.status(400).json({ msg: 'El rol seleccionado no existe' });
+      }
+      const rolNombre = rolDoc.rol;
 
       // Validar que no exista el email en la db
       const existingUsers = await getUsers();
@@ -57,22 +68,22 @@ exports.createUser = [
       // Encriptar la contraseña con Argon2id
       const hashedPassword = await argon2.hash(password, { type: argon2.argon2id });
 
-      // Crear el usuario y enviar el correo
+      // Crear el usuario guardando el NOMBRE del rol (no el ObjectId)
       await createUser({
         name,
         email,
-        rol_id,
+        rol_id: rolNombre,
         user,
         apellido,
         compania,
         hashedPassword,
-        passwordPlain: password, // Solo se usa internamente para enviarlo por email
+        passwordPlain: password,
       });
 
-      // No se devuelve la contraseña en la respuesta
       return res.status(201).json({
-        msg: 'Usuario creado y correo enviado con las credenciales',
+        msg: 'Usuario creado exitosamente',
         email,
+        password,
       });
 
     } catch (error) {
@@ -101,28 +112,20 @@ exports.updateUser = async (req, res) => {
 
     let hashedPassword;
     if (newPassword) {
-      // Si el usuario está cambiando su propia contraseña, exigir la actual
-      if (req.user.id === id) {
-        if (!currentPassword) {
-          return res.status(400).json({ msg: 'Debes proporcionar tu contraseña actual para cambiarla' });
-        }
-        const userDoc = await User.findById(id).select('+password');
-        if (!userDoc) {
-          return res.status(404).json({ msg: 'Usuario no encontrado' });
-        }
-        const valid = await argon2.verify(userDoc.password, currentPassword);
-        if (!valid) {
-          return res.status(401).json({ msg: 'La contraseña actual es incorrecta' });
-        }
-      }
-      // Longitud mínima
       if (newPassword.length < 8) {
         return res.status(400).json({ msg: 'La nueva contraseña debe tener al menos 8 caracteres' });
       }
       hashedPassword = await argon2.hash(newPassword, { type: argon2.argon2id });
     }
 
-    await updateUser(id, { name, email, rol_id, user, apellido, compania, estado, hashedPassword });
+    // Si se envía un rol, resolverlo al nombre real (el frontend envía el _id)
+    let rolNombre = rol_id;
+    if (rol_id) {
+      const rolDoc = await RolModel.findById(rol_id).catch(() => null);
+      if (rolDoc) rolNombre = rolDoc.rol;
+    }
+
+    await updateUser(id, { name, email, rol_id: rolNombre, user, apellido, compania, estado, hashedPassword });
 
     return res.json({ msg: 'Usuario actualizado' });
 

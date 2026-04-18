@@ -96,8 +96,9 @@ router.put("/productos/:id",  authMiddleware, permisosMiddleware.hasPermission('
 router.delete("/productos/:id", authMiddleware, permisosMiddleware.hasPermission('eliminar_productos'), Productos.deleteProduct);
 
 // ====== Movimientos ======
-router.post("/movimientos", authMiddleware, permisosMiddleware.hasPermission('crear_movimientos'), Movimientos.createMovimiento);
-router.get("/movimientos", authMiddleware, permisosMiddleware.hasPermission('ver_movimientos'), Movimientos.getMovimientos);
+router.post  ("/movimientos",     authMiddleware, permisosMiddleware.hasPermission('crear_movimientos'),   Movimientos.createMovimiento);
+router.get   ("/movimientos",     authMiddleware, permisosMiddleware.hasPermission('ver_movimientos'),     Movimientos.getMovimientos);
+router.delete("/movimientos/:id", authMiddleware, permisosMiddleware.hasPermission('eliminar_movimientos'), Movimientos.deleteMovimiento);
 
 // ====== Servicios ======
 router.post("/servicios", authMiddleware, permisosMiddleware.hasPermission('crear_servicios'), servicios.crearServiciosSupservicio);

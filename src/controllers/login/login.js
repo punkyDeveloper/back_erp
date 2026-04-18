@@ -30,7 +30,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Buscar usuario por email (sin incluir password en la query)
+    // Buscar usuario por email
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
@@ -65,7 +65,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Nomnre de la comapñia podría ser útil en el payload
+    // Nombre de la compañía
     const company = await compania.findById(user.compania);
     const nombreCompany = company ? company.nombreCompany : null;
 
