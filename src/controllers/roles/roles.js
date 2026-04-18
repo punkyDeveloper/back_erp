@@ -27,13 +27,17 @@ exports.roleCreate = async (req, res) => {
   }
 };
 
-// Obtener todos los roles
+// Obtener roles: Master/Administrador ven todos; los demás no ven esos dos roles
 exports.getRoles = async (req, res) => {
   try {
-    const roles = await Role.find();
+    const rolesPrivilegiados = ['Master', 'Administrador'];
+    const esPrivilegiado = rolesPrivilegiados.includes(req.user.rol);
+    const filter = esPrivilegiado ? {} : { rol: { $nin: rolesPrivilegiados } };
+    const roles = await Role.find(filter);
     res.json(roles);
   } catch (error) {
-    console.log(Error)
+    console.error('[getRoles]', error);
+    res.status(500).json({ msg: 'Error al obtener los roles' });
   }
 };
 

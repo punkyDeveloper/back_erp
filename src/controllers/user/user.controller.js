@@ -93,10 +93,13 @@ exports.createUser = [
   },
 ];
 
-// Obtener todos los usuarios
+// Obtener usuarios: Master/Administrador ven todos, los demás solo su compañía
 exports.getUsers = async (req, res) => {
   try {
-    const users = await getUsers();
+    const rolesPrivilegiados = ['Master', 'Administrador'];
+    const esPrivilegiado = rolesPrivilegiados.includes(req.user.rol);
+    const compania = esPrivilegiado ? null : req.user.compania;
+    const users = await getUsers({ compania });
     res.json(users);
   } catch (error) {
     console.error('[getUsers]', error);

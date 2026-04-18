@@ -140,15 +140,6 @@ const finalizarMantenimiento = async ({ id, companiaId }) => {
     err.code = "YA_FINALIZADO"; throw err;
   }
 
-  // Validar que el total abonado cubra el costo al cliente
-  if (mecanica.costoCliente > 0) {
-    const totalAbonado = (mecanica.abonos || []).reduce((s, a) => s + (Number(a.monto) || 0), 0);
-    if (totalAbonado < mecanica.costoCliente) {
-      const err = new Error(`El cliente aún debe $${(mecanica.costoCliente - totalAbonado).toLocaleString('es-CO')}. Registra el pago completo antes de finalizar.`);
-      err.code = "PAGO_INCOMPLETO"; throw err;
-    }
-  }
-
   const esGarantia = mecanica.tipo === "Garantía";
 
   const movimiento = await MovimientoService.createMovimiento({

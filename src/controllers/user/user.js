@@ -52,9 +52,10 @@ async function createUser({ name, email, rol_id, user, apellido, compania, hashe
 
 // Obtener todos los usuarios
 
-async function getUsers() {
+async function getUsers({ compania } = {}) {
     try {
-        const users = await User.find({}, {
+        const filter = compania ? { compania } : {};
+        const users = await User.find(filter, {
             _id: 1,
             nombre: 1,
             apellido: 1,
@@ -70,7 +71,7 @@ async function getUsers() {
         console.error(error);
         throw new Error('Error al obtener los usuarios');
     }
-} 
+}
 
 
 async function updateUser(id, { name, email, rol_id, user, apellido, compania, estado, hashedPassword }) {

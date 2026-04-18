@@ -164,9 +164,8 @@ const finalizarMantenimiento = async (req, res) => {
     return res.json({ ok: true, data: resultado.mecanica, movimiento: resultado.movimiento });
   } catch (e) {
     console.error("[finalizarMantenimiento]", e);
-    if (e.code === "NOT_FOUND")      return res.status(404).json({ ok: false, msg: e.message });
-    if (e.code === "YA_FINALIZADO")  return res.status(400).json({ ok: false, msg: e.message });
-    if (e.code === "PAGO_INCOMPLETO") return res.status(400).json({ ok: false, msg: e.message });
+    if (e.code === "NOT_FOUND")     return res.status(404).json({ ok: false, msg: e.message });
+    if (e.code === "YA_FINALIZADO") return res.status(400).json({ ok: false, msg: e.message });
     return res.status(500).json({ ok: false, msg: "Error al finalizar el mantenimiento" });
   }
 };
