@@ -5,7 +5,7 @@ exports.createProduct = async (req, res) => {
     const companiaId = req.user.compania;
     if (!companiaId) return res.status(403).json({ msg: 'Sin compañía en el token' });
 
-    const { name, description, price, venta, alquiler, stock } = req.body;
+    const { name, description, price, precio_costo, venta, alquiler, stock } = req.body;
 
     if (!name || !description || !price || !stock) {
       return res.status(400).json({ msg: 'name, description, price y stock son requeridos' });
@@ -18,12 +18,13 @@ exports.createProduct = async (req, res) => {
     const producto = await crearProducto({
       name,
       description,
-      price:    Number(price),
-      stock:    Number(stock),
-      venta:    ventaBool,
-      alquiler: alquilerBool,
-      img:      imageUrl,
-      compania: companiaId,
+      price:        Number(price),
+      precio_costo: precio_costo !== undefined ? Number(precio_costo) : 0,
+      stock:        Number(stock),
+      venta:        ventaBool,
+      alquiler:     alquilerBool,
+      img:          imageUrl,
+      compania:     companiaId,
     });
 
     res.status(201).json(producto);
@@ -61,16 +62,17 @@ exports.updateProduct = async (req, res) => {
   try {
     const companiaId = req.user.compania;
     const { id }     = req.params;
-    const { name, description, price, venta, alquiler, stock } = req.body;
+    const { name, description, price, precio_costo, venta, alquiler, stock } = req.body;
 
     const update = { compania: companiaId };
-    if (name        !== undefined) update.name        = name;
-    if (description !== undefined) update.description = description;
-    if (price       !== undefined) update.price       = Number(price);
-    if (stock       !== undefined) update.stock       = Number(stock);
-    if (venta       !== undefined) update.venta       = venta    === 'true' || venta    === true;
-    if (alquiler    !== undefined) update.alquiler    = alquiler === 'true' || alquiler === true;
-    if (req.file?.cloudinaryUrl)   update.img         = req.file.cloudinaryUrl;
+    if (name         !== undefined) update.name         = name;
+    if (description  !== undefined) update.description  = description;
+    if (price        !== undefined) update.price        = Number(price);
+    if (precio_costo !== undefined) update.precio_costo = Number(precio_costo);
+    if (stock        !== undefined) update.stock        = Number(stock);
+    if (venta        !== undefined) update.venta        = venta    === 'true' || venta    === true;
+    if (alquiler     !== undefined) update.alquiler     = alquiler === 'true' || alquiler === true;
+    if (req.file?.cloudinaryUrl)    update.img          = req.file.cloudinaryUrl;
 
     const updated = await editarProducto(id, update);
     if (!updated) return res.status(404).json({ msg: 'Producto no encontrado' });

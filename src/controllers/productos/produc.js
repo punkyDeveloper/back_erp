@@ -1,7 +1,7 @@
 const Product = require('../../moduls/product');
 
-async function crearProducto({ name, description, price, venta, alquiler, img, compania, stock }) {
-  const newProduct = new Product({ name, description, price, venta, alquiler, img, stock, compania });
+async function crearProducto({ name, description, price, precio_costo, venta, alquiler, img, compania, stock }) {
+  const newProduct = new Product({ name, description, price, precio_costo, venta, alquiler, img, stock, compania });
   await newProduct.save();
   return newProduct;
 }

@@ -4,8 +4,9 @@ const productSchema = new mongoose.Schema({
   name: { type: String },
   description: { type: String },
   price: { type: Number },
-  venta: { type: Boolean },    
-  alquiler: { type: Boolean }, 
+  precio_costo: { type: Number, default: 0 },
+  venta: { type: Boolean },
+  alquiler: { type: Boolean },
   img: { type: String },
   stock: { type: Number, default: 0 },
   compania: { type: mongoose.Schema.Types.ObjectId, ref: "Company" }

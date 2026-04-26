@@ -22,7 +22,7 @@ const createVenta = async (req, res) => {
     const companiaId = req.user.compania;
     if (!companiaId) return res.status(403).json({ ok: false, msg: 'Sin compañía en el token' });
 
-    const venta = await VentasService.crearVenta({ companiaId, datos: req.body });
+    const venta = await VentasService.crearVenta({ companiaId, datos: req.body, user: req.user });
     return res.status(201).json({ ok: true, data: venta });
   } catch (error) {
     console.error('[createVenta]', error);
@@ -37,7 +37,7 @@ const updateVenta = async (req, res) => {
     if (!companiaId) return res.status(403).json({ ok: false, msg: 'Sin compañía en el token' });
 
     const { id } = req.params;
-    const venta = await VentasService.actualizarVenta({ id, companiaId, datos: req.body });
+    const venta = await VentasService.actualizarVenta({ id, companiaId, datos: req.body, user: req.user });
 
     if (!venta) return res.status(404).json({ ok: false, msg: 'Venta no encontrada' });
 

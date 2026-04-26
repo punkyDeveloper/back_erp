@@ -1,5 +1,65 @@
-const Venta   = require('../../moduls/venta');
-const Counter = require('../../moduls/counter');
+const Venta      = require('../../moduls/venta');
+const Counter    = require('../../moduls/counter');
+const Product    = require('../../moduls/product');
+const Movimiento = require('../../moduls/movimiento');
+
+// ─── Decrementar stock (reserva o venta directa) ─────────────────────────────
+async function decrementarStock(items) {
+  for (const item of items) {
+    await Product.findByIdAndUpdate(item.producto, {
+      $inc: { stock: -Math.abs(Number(item.cantidad)) },
+    });
+  }
+}
+
+// ─── Liberar stock reservado (al cancelar borrador) ──────────────────────────
+async function liberarStock(items) {
+  for (const item of items) {
+    await Product.findByIdAndUpdate(item.producto, {
+      $inc: { stock: Math.abs(Number(item.cantidad)) },
+    });
+  }
+}
+
+// ─── Ajustar stock al modificar un borrador (delta entre items viejos y nuevos)
+async function ajustarStockBorrador(oldItems, newItems) {
+  const oldMap = {};
+  for (const it of oldItems) {
+    const id = it.producto.toString();
+    oldMap[id] = (oldMap[id] || 0) + Number(it.cantidad);
+  }
+  const newMap = {};
+  for (const it of newItems) {
+    const id = it.producto.toString();
+    newMap[id] = (newMap[id] || 0) + Number(it.cantidad);
+  }
+  const allIds = new Set([...Object.keys(oldMap), ...Object.keys(newMap)]);
+  for (const id of allIds) {
+    const delta = (newMap[id] || 0) - (oldMap[id] || 0);
+    if (delta !== 0) {
+      await Product.findByIdAndUpdate(id, { $inc: { stock: -delta } });
+    }
+  }
+}
+
+// ─── Crear movimiento de ingreso por venta POS ────────────────────────────────
+async function crearIngresoVenta(venta, companiaId, user) {
+  await Movimiento.create({
+    tipo_movimiento: 'ingreso',
+    referencia:      venta.numeroFactura,
+    fecha:           new Date(),
+    valor:           venta.total,
+    tipo:            'Venta de producto',
+    descripcion:     `Venta POS - Factura ${venta.numeroFactura}${venta.clienteNombre ? ` - ${venta.clienteNombre}` : ''}`,
+    compania:        companiaId,
+    nombre:          user?.nombre || 'POS',
+    modulo:          'pos',
+    referenciaId:    venta._id,
+    metodo_pago:     venta.metodoPago,
+    cliente_nombre:  venta.clienteNombre,
+    numero_factura:  venta.numeroFactura,
+  });
+}
 
 // ─── Calcular totales a partir de los items ───────────────────────────────────
 function calcularTotales(items, descuento = 0) {
@@ -38,7 +98,7 @@ async function getNextNumeroFactura(companiaId) {
 }
 
 // ─── Crear venta ──────────────────────────────────────────────────────────────
-async function crearVenta({ companiaId, datos }) {
+async function crearVenta({ companiaId, datos, user }) {
   const { clienteNombre, items = [], descuento = 0, metodoPago, notas, estado = 'borrador' } = datos;
 
   const itemsNorm = items.map(i => ({
@@ -66,11 +126,21 @@ async function crearVenta({ companiaId, datos }) {
   });
 
   await venta.save();
+
+  if (estado === 'borrador') {
+    // Reservar stock al crear un borrador nuevo
+    await decrementarStock(itemsNorm);
+  } else if (estado === 'finalizada') {
+    // Venta directa sin pasar por borrador: decrementar y registrar ingreso
+    await decrementarStock(itemsNorm);
+    await crearIngresoVenta(venta, companiaId, user);
+  }
+
   return venta;
 }
 
 // ─── Actualizar venta ─────────────────────────────────────────────────────────
-async function actualizarVenta({ id, companiaId, datos }) {
+async function actualizarVenta({ id, companiaId, datos, user }) {
   const venta = await Venta.findOne({ _id: id, companiaId });
   if (!venta) return null;
 
@@ -82,6 +152,13 @@ async function actualizarVenta({ id, companiaId, datos }) {
   }
 
   const { clienteNombre, items, descuento, metodoPago, notas, estado } = datos;
+  const seEstaFinalizando = estado === 'finalizada';
+
+  // Guardar items anteriores antes de modificar (para calcular delta de reserva)
+  const oldItems = venta.items.map(i => ({
+    producto: i.producto.toString(),
+    cantidad: i.cantidad,
+  }));
 
   if (clienteNombre !== undefined) venta.clienteNombre = clienteNombre;
   if (metodoPago    !== undefined) venta.metodoPago    = metodoPago;
@@ -104,6 +181,23 @@ async function actualizarVenta({ id, companiaId, datos }) {
   venta.total     = total;
 
   await venta.save();
+
+  if (seEstaFinalizando) {
+    // El stock ya estaba reservado desde que se guardó como borrador.
+    // Solo se crea el ingreso, sin volver a decrementar.
+    await crearIngresoVenta(venta, companiaId, user);
+  } else if (estado === 'cancelada') {
+    // Borrador cancelado: devolver el stock reservado al inventario
+    await liberarStock(oldItems);
+  } else if (items !== undefined) {
+    // Sigue siendo borrador pero cambiaron los items: ajustar la reserva
+    const newItems = venta.items.map(i => ({
+      producto: i.producto.toString(),
+      cantidad: i.cantidad,
+    }));
+    await ajustarStockBorrador(oldItems, newItems);
+  }
+
   return venta;
 }
 
@@ -116,6 +210,11 @@ async function cancelarVenta({ id, companiaId }) {
     const err = new Error('No se puede cancelar una venta ya finalizada');
     err.code = 'ESTADO_INVALIDO';
     throw err;
+  }
+
+  // Si era borrador, devolver el stock reservado al inventario
+  if (venta.estado === 'borrador' && venta.items?.length) {
+    await liberarStock(venta.items);
   }
 
   venta.estado = 'cancelada';
